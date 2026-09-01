@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista de Verificación Quirúrgica (Time Out)</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header__brand">
+    <span class="app-header__hospital" id="hospitalName">CIMA</span>
+    <div class="app-header__titles">
+      <h1>Lista de Verificación Quirúrgica</h1>
+      <p>Cirugía segura · Time Out · NOM-004-SSA3 / NOM-006-SSA3 / Lista OMS de Cirugía Segura</p>
+    </div>
+  </div>
+  <nav class="app-header__nav">
+    <button type="button" class="navbtn is-active" data-view="form">Nuevo registro</button>
+    <button type="button" class="navbtn" data-view="history">Historial</button>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- ===================== VISTA: FORMULARIO ===================== -->
+  <section id="view-form" class="view">
+
+    <ol class="stepper" id="stepper">
+      <li data-step="0" class="is-active"><span>1</span>Datos generales</li>
+      <li data-step="1"><span>2</span>1ª Verificación</li>
+      <li data-step="2"><span>3</span>2ª Verificación</li>
+      <li data-step="3"><span>4</span>3ª Verificación</li>
+      <li data-step="4"><span>5</span>Implantes</li>
+      <li data-step="5"><span>6</span>Resumen</li>
+    </ol>
+
+    <form id="checklistForm" autocomplete="off">
+
+      <!-- STEP 0: DATOS GENERALES -->
+      <section class="step" data-step="0">
+        <h2>Datos generales</h2>
+        <p class="step__hint">Corresponde al encabezado y adesógrafo de la hoja física.</p>
+        <div class="grid">
+          <label>Fecha
+            <input type="date" name="fecha" required>
+          </label>
+          <label>Hora de inicio de registro
+            <input type="time" name="horaInicio" required>
+          </label>
+          <label>Sala / Quirófano
+            <input type="text" name="sala" placeholder="Ej. Quirófano 2">
+          </label>
+          <label class="col-2">Nombre del paciente
+            <input type="text" name="paciente" required placeholder="Nombre completo del paciente">
+          </label>
+          <label>Número de expediente
+            <input type="text" name="expediente" required>
+          </label>
+          <label>Edad
+            <input type="text" name="edad" inputmode="numeric">
+          </label>
+          <label class="col-2">Cirugía / Procedimiento programado
+            <input type="text" name="cirugia" required placeholder="Ej. Colecistectomía laparoscópica">
+          </label>
+          <label>Cirujano responsable
+            <input type="text" name="cirujano" required>
+          </label>
+          <label>Anestesiólogo(a)
+            <input type="text" name="anestesiologo" required>
+          </label>
+        </div>
+      </section>
+
+      <!-- STEP 1: PRIMERA VERIFICACIÓN -->
+      <section class="step" data-step="1">
+        <div class="phase-head">
+          <h2>Primera verificación</h2>
+          <span class="phase-head__sub">Antes de la inducción anestésica / preanestesia (Sign In)</span>
+        </div>
+
+        <div class="checklist" data-phase="v1">
+
+          <div class="item" data-item="pacienteCorrecto">
+            <p class="item__label">Paciente correcto. Se corroboraron los dos identificadores con pulsera de identificación.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="pacienteDiceProcedimiento">
+            <p class="item__label">El paciente dice el procedimiento a realizarse.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="alergias">
+            <p class="item__label">Alergias conocidas.</p>
+            <div class="item__answer" data-options="si,no"></div>
+            <label class="item__detail" data-show-if="alergias=si">Especifique la(s) alergia(s)
+              <input type="text" data-detail-for="alergias">
+            </label>
+          </div>
+
+          <div class="item" data-item="sitioMarcado">
+            <p class="item__label">Está marcado el sitio quirúrgico a intervenir (cirujano-paciente).</p>
+            <div class="item__answer" data-options="si,no,na"></div>
+          </div>
+
+          <div class="item" data-item="marcajeNoPosible" data-show-if="sitioMarcado=no">
+            <p class="item__label">El marcaje del sitio quirúrgico NO es posible (negativa del paciente, prematurez, condición de piel, etc.)</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item item--sitemap">
+            <p class="item__label">Identifica el sitio en el mapa corporal.</p>
+            <div class="bodymap" id="bodymap"></div>
+            <div class="grid">
+              <label>Sitio anatómico
+                <input type="text" name="sitioAnatomico" placeholder="Ej. Rodilla, hernia inguinal, mama...">
+              </label>
+              <label>Lateralidad
+                <select name="lateralidad">
+                  <option value="">Seleccione…</option>
+                  <option value="derecho">Derecho</option>
+                  <option value="izquierdo">Izquierdo</option>
+                  <option value="bilateral">Bilateral</option>
+                  <option value="linea_media">Línea media</option>
+                  <option value="no_aplica">No aplica</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="item" data-item="estudiosDisponibles">
+            <p class="item__label">Están disponibles estudios e imágenes diagnósticas para el procedimiento a realizarse.</p>
+            <div class="item__answer" data-options="si,no,na"></div>
+          </div>
+
+          <div class="item" data-item="profilaxisV1">
+            <p class="item__label">¿Profilaxis antibiótica administrada?</p>
+            <div class="item__answer" data-options="si,no"></div>
+            <label class="item__detail" data-show-if="profilaxisV1=si">Especifique (antibiótico, dosis, hora)
+              <input type="text" data-detail-for="profilaxisV1">
+            </label>
+          </div>
+
+          <div class="item" data-item="consentimiento">
+            <p class="item__label">Consentimiento informado.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="riesgoHemorragia">
+            <p class="item__label">Riesgo de hemorragia.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="componentesSanguineos">
+            <p class="item__label">Disponibilidad de componentes sanguíneos ¿doble vía?</p>
+            <div class="item__answer" data-options="si,no,na"></div>
+          </div>
+
+          <div class="item" data-item="valoracionPreanestesica">
+            <p class="item__label">Valoración preanestésica realizada.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="viaAereaDificil">
+            <p class="item__label">Vía aérea difícil identificada.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="seguridadAnestesica">
+            <p class="item__label">Seguridad anestésica completada.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="materialDisponible">
+            <p class="item__label">Material, instrumental, medicamentos y equipo electromédico disponibles.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="vigenciaVerificada">
+            <p class="item__label">¿Ha sido verificada la vigencia de los materiales e instrumental a utilizarse?</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+        </div>
+
+        <div class="signoff">
+          <label>Nombre de la persona que realiza la verificación
+            <input type="text" name="v1_verificadoPor" required>
+          </label>
+          <label>Hora
+            <input type="time" name="v1_hora" required>
+          </label>
+        </div>
+      </section>
+
+      <!-- STEP 2: SEGUNDA VERIFICACIÓN -->
+      <section class="step" data-step="2">
+        <div class="phase-head">
+          <h2>Segunda verificación</h2>
+          <span class="phase-head__sub">Antes de la incisión cutánea · Pausa quirúrgica (Time Out)</span>
+        </div>
+
+        <div class="checklist" data-phase="v2">
+
+          <div class="item" data-item="equipoCompleto">
+            <p class="item__label">Equipo quirúrgico completo.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="pacienteCorrectoV2">
+            <p class="item__label">Paciente correcto.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="procedimientoCorrecto">
+            <p class="item__label">Procedimiento correcto.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="sitioCorrectoV2">
+            <p class="item__label">Sitio quirúrgico correcto (si aplica).</p>
+            <div class="item__answer" data-options="si,no,na"></div>
+          </div>
+
+          <div class="item" data-item="profilaxisV2">
+            <p class="item__label">Profilaxis antibiótica administrada.</p>
+            <div class="item__answer" data-options="si,no,na"></div>
+          </div>
+
+          <div class="item" data-item="esterilizacionVerificada">
+            <p class="item__label">Verificación de indicadores de esterilización del instrumental a utilizarse.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+        </div>
+
+        <div class="laser-block">
+          <label class="switch">
+            <input type="checkbox" id="usaLaser">
+            ¿Se utilizará láser en este procedimiento?
+          </label>
+          <div class="laser-block__options" id="laserOptions" hidden>
+            <label><input type="checkbox" name="laser_epp"> Uso de equipo de protección personal</label>
+            <label><input type="checkbox" name="laser_senalizacion"> Señalización de precaución en puerta de quirófano</label>
+            <label><input type="checkbox" name="laser_ventana"> Protección en ventana</label>
+          </div>
+        </div>
+
+        <div class="signoff">
+          <label>Nombre de la persona que realiza la verificación
+            <input type="text" name="v2_verificadoPor" required>
+          </label>
+          <label>Hora (pausa quirúrgica)
+            <input type="time" name="v2_hora" required>
+          </label>
+        </div>
+      </section>
+
+      <!-- STEP 3: TERCERA VERIFICACIÓN -->
+      <section class="step" data-step="3">
+        <div class="phase-head">
+          <h2>Tercera verificación</h2>
+          <span class="phase-head__sub">Antes de que el paciente salga de sala quirúrgica (Sign Out) · Confirmación verbal con el equipo</span>
+        </div>
+
+        <div class="checklist" data-phase="v3">
+
+          <div class="item" data-item="procedimientoConfirmado">
+            <p class="item__label">Se confirma procedimiento realizado.</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="conteoCompleto">
+            <p class="item__label">Cuenta de instrumental, textil y agujas completo.</p>
+            <div class="item__answer" data-options="si,no"></div>
+            <label class="item__detail" data-show-if="conteoCompleto=no">Describa la discrepancia y las acciones tomadas
+              <textarea data-detail-for="conteoCompleto" rows="2"></textarea>
+            </label>
+          </div>
+
+          <div class="item" data-item="patologiaEtiquetada">
+            <p class="item__label">La pieza de patología anatómica, ¿está debidamente etiquetada y se encuentra en solución conservadora?</p>
+            <div class="item__answer" data-options="si,no,na"></div>
+          </div>
+
+          <div class="item" data-item="problemasMaterial">
+            <p class="item__label">¿Existen problemas que reportar relacionados con material y equipo utilizado?</p>
+            <div class="item__answer" data-options="si,no"></div>
+            <label class="item__detail" data-show-if="problemasMaterial=si">Describa el problema
+              <textarea data-detail-for="problemasMaterial" rows="2"></textarea>
+            </label>
+          </div>
+
+        </div>
+
+        <div class="signoff">
+          <label>Nombre de la persona que realiza la verificación
+            <input type="text" name="v3_verificadoPor" required>
+          </label>
+          <label>Hora
+            <input type="time" name="v3_hora" required>
+          </label>
+        </div>
+      </section>
+
+      <!-- STEP 4: TRAZABILIDAD DE IMPLANTES -->
+      <section class="step" data-step="4">
+        <h2>Trazabilidad de dispositivos médicos implantados</h2>
+        <p class="step__hint">Sección posterior de la hoja física. Registre cada dispositivo implantado durante el procedimiento.</p>
+
+        <label class="switch">
+          <input type="checkbox" id="usaImplante">
+          ¿Se utilizó algún dispositivo médico implantado en este procedimiento?
+        </label>
+
+        <div id="implantesBlock" hidden>
+          <table class="implant-table" id="implantTable">
+            <thead>
+              <tr>
+                <th>Dispositivo</th>
+                <th>Fabricante / Marca</th>
+                <th>Modelo / Referencia</th>
+                <th>Lote</th>
+                <th>Serie</th>
+                <th>Caducidad</th>
+                <th>Sitio de implante</th>
+                <th>Cant.</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="implantRows"></tbody>
+          </table>
+          <button type="button" class="btn btn--ghost" id="addImplantRow">+ Agregar dispositivo</button>
+        </div>
+      </section>
+
+      <!-- STEP 5: RESUMEN -->
+      <section class="step" data-step="5">
+        <h2>Resumen del registro</h2>
+        <div id="summaryContent"></div>
+        <div class="summary-actions">
+          <button type="button" class="btn btn--ghost" id="printSummaryBtn">Imprimir / Guardar como PDF</button>
+          <button type="submit" class="btn btn--primary" id="saveRecordBtn">Guardar registro</button>
+        </div>
+      </section>
+
+      <div class="stepnav">
+        <button type="button" class="btn btn--ghost" id="prevStepBtn">Anterior</button>
+        <button type="button" class="btn btn--primary" id="nextStepBtn">Siguiente</button>
+      </div>
+
+    </form>
+  </section>
+
+  <!-- ===================== VISTA: HISTORIAL ===================== -->
+  <section id="view-history" class="view" hidden>
+    <div class="history-toolbar">
+      <h2>Historial de registros</h2>
+      <div class="history-toolbar__actions">
+        <input type="search" id="historySearch" placeholder="Buscar por paciente, expediente o cirugía…">
+        <button type="button" class="btn btn--ghost" id="exportAllBtn">Exportar todo (JSON)</button>
+        <label class="btn btn--ghost file-btn">Importar
+          <input type="file" id="importFile" accept="application/json" hidden>
+        </label>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Paciente</th>
+            <th>Expediente</th>
+            <th>Cirugía</th>
+            <th>Estado</th>
+            <th>Alertas</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="historyRows"></tbody>
+      </table>
+    </div>
+    <p class="empty-state" id="historyEmpty" hidden>Aún no hay registros guardados en este dispositivo.</p>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p><strong>Aviso:</strong> los registros se guardan únicamente en el almacenamiento local de este navegador/dispositivo. Exporte periódicamente el respaldo (JSON) y consulte con el área de sistemas del hospital antes de usar esta herramienta como sustituto del expediente clínico oficial (NOM-004-SSA3-2012). Esta lista de verificación se basa en la Lista OMS de Verificación de la Cirugía Segura y en los elementos mínimos observados en el formato físico institucional.</p>
+</footer>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
