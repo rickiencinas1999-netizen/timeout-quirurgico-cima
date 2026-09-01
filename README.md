@@ -42,7 +42,7 @@ principio de verificación activa de la Lista OMS.
 
 ## Cómo usarla
 
-No requiere instalación ni backend: es HTML/CSS/JavaScript puro.
+No requiere instalación de software ni backend: es HTML/CSS/JavaScript puro.
 
 1. Abra `index.html` directamente en el navegador, o sírvalo con cualquier
    servidor estático, por ejemplo:
@@ -54,6 +54,32 @@ No requiere instalación ni backend: es HTML/CSS/JavaScript puro.
    verificación → Implantes → Resumen).
 3. En "Resumen" puede **imprimir / guardar como PDF** y **guardar el registro**.
 4. En "Historial" puede buscar, ver, eliminar o exportar/importar respaldos.
+
+## Instalarla como app (PWA)
+
+La app incluye `manifest.json`, íconos y un `service-worker.js`, así que se puede
+**instalar** en el celular, tablet o computadora del personal (ícono propio,
+pantalla completa, funciona sin conexión una vez cargada), siempre que se sirva
+por **HTTPS** — no funciona el "Add to Home Screen" abriendo el archivo local.
+
+La forma más simple es publicar el sitio con **GitHub Pages** (gratis, HTTPS
+automático):
+
+1. En GitHub → **Settings → General → Danger Zone → Change visibility** → hacer
+   el repositorio **público** (Pages en cuentas gratuitas solo sirve repos
+   públicos; el código no contiene datos de pacientes — esos solo existen en el
+   `localStorage` de cada dispositivo, nunca en el repositorio).
+2. **Settings → Pages → Build and deployment → Source**: `Deploy from a branch`
+   → Branch: `main`, carpeta `/ (root)` → **Save**.
+3. Tras uno o dos minutos, GitHub publica la URL (algo como
+   `https://<usuario>.github.io/timeout-quirurgico-cima/`).
+4. Desde el navegador del celular/tablet, abrir esa URL y usar la opción
+   **"Agregar a pantalla de inicio"** / **"Instalar app"** (aparece automático
+   en Chrome/Edge/Android; en iPhone/iPad es Safari → compartir → "Agregar a
+   pantalla de inicio").
+
+Cada vez que se actualice el código en `main`, GitHub Pages republica solo; no
+hay paso de compilación.
 
 ## Aviso importante sobre los datos
 
