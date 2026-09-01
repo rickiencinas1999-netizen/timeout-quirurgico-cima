@@ -150,9 +150,27 @@
           <div class="item" data-item="profilaxisV1">
             <p class="item__label">¿Profilaxis antibiótica administrada?</p>
             <div class="item__answer" data-options="si,no"></div>
-            <label class="item__detail" data-show-if="profilaxisV1=si">Especifique (antibiótico, dosis, hora)
-              <input type="text" data-detail-for="profilaxisV1">
-            </label>
+            <div class="item__detail item__detail-grid" data-show-if="profilaxisV1=si">
+              <label>Hora de aplicación
+                <input type="time" data-detail-for="profilaxisV1" data-detail-field="hora">
+              </label>
+              <label>Medicamento
+                <input type="text" data-detail-for="profilaxisV1" data-detail-field="medicamento" placeholder="Ej. Cefazolina">
+              </label>
+              <label>Dosis
+                <input type="text" data-detail-for="profilaxisV1" data-detail-field="dosis" placeholder="Ej. 2 g">
+              </label>
+              <label>Vía
+                <select data-detail-for="profilaxisV1" data-detail-field="via">
+                  <option value="">Seleccione…</option>
+                  <option value="IV">IV</option>
+                  <option value="IM">IM</option>
+                  <option value="VO">VO</option>
+                  <option value="Tópica">Tópica</option>
+                  <option value="Otra">Otra</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div class="item" data-item="consentimiento">
@@ -239,6 +257,27 @@
           <div class="item" data-item="profilaxisV2">
             <p class="item__label">Profilaxis antibiótica administrada.</p>
             <div class="item__answer" data-options="si,no,na"></div>
+            <div class="item__detail item__detail-grid" data-show-if="profilaxisV2=si">
+              <label>Hora de aplicación
+                <input type="time" data-detail-for="profilaxisV2" data-detail-field="hora">
+              </label>
+              <label>Medicamento
+                <input type="text" data-detail-for="profilaxisV2" data-detail-field="medicamento" placeholder="Ej. Cefazolina">
+              </label>
+              <label>Dosis
+                <input type="text" data-detail-for="profilaxisV2" data-detail-field="dosis" placeholder="Ej. 2 g">
+              </label>
+              <label>Vía
+                <select data-detail-for="profilaxisV2" data-detail-field="via">
+                  <option value="">Seleccione…</option>
+                  <option value="IV">IV</option>
+                  <option value="IM">IM</option>
+                  <option value="VO">VO</option>
+                  <option value="Tópica">Tópica</option>
+                  <option value="Otra">Otra</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div class="item" data-item="esterilizacionVerificada">

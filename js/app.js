@@ -238,14 +238,30 @@ function validateCurrentStep() {
 }
 
 /* ================================ Recolección ================================ */
+const DETAIL_FIELD_LABELS = { hora: "Hora", medicamento: "Medicamento", dosis: "Dosis", via: "Vía" };
+
+function readItemDetail(item, id) {
+  const fields = item.querySelectorAll(`[data-detail-for="${id}"][data-detail-field]`);
+  if (fields.length) {
+    const campos = {};
+    fields.forEach((el) => { campos[el.dataset.detailField] = el.value.trim(); });
+    const detalle = Object.entries(campos)
+      .filter(([, v]) => v)
+      .map(([k, v]) => (k === "hora" ? v : `${DETAIL_FIELD_LABELS[k] || k}: ${v}`))
+      .join(" · ");
+    return { detalle, campos };
+  }
+  const detailEl = item.querySelector(`[data-detail-for="${id}"]`);
+  return { detalle: detailEl ? detailEl.value.trim() : "" };
+}
+
 function collectPhaseAnswers(phase) {
   const answers = {};
   document.querySelectorAll(`.checklist[data-phase="${phase}"] .item`).forEach((item) => {
     const id = item.dataset.item;
     const answerEl = item.querySelector(".item__answer");
     const value = answerEl ? answerEl.dataset.value || null : null;
-    const detailEl = item.querySelector(`[data-detail-for="${id}"]`);
-    answers[id] = { value, detalle: detailEl ? detailEl.value.trim() : "" };
+    answers[id] = { value, ...readItemDetail(item, id) };
   });
   return answers;
 }
@@ -443,8 +459,13 @@ function loadRecordIntoForm(record) {
         answerEl.dataset.value = ans.value;
         answerEl.querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("is-selected", b.dataset.val === ans.value));
       }
-      const detailEl = item.querySelector(`[data-detail-for="${id}"]`);
-      if (detailEl) detailEl.value = ans.detalle || "";
+      const fieldEls = item.querySelectorAll(`[data-detail-for="${id}"][data-detail-field]`);
+      if (fieldEls.length) {
+        fieldEls.forEach((el) => { el.value = ans.campos?.[el.dataset.detailField] || ""; });
+      } else {
+        const detailEl = item.querySelector(`[data-detail-for="${id}"]`);
+        if (detailEl) detailEl.value = ans.detalle || "";
+      }
     });
     form[`${phase}_verificadoPor`].value = record[phase].verificadoPor || "";
     form[`${phase}_hora`].value = record[phase].hora || "";
