@@ -642,13 +642,13 @@ function renderHistory() {
       : `<span class="badge badge--ok">0</span>`;
     return `
       <tr>
-        <td>${escapeHtml(r.general.fecha || "—")}</td>
-        <td>${escapeHtml(r.general.paciente || "—")}</td>
-        <td>${escapeHtml(r.general.expediente || "—")}</td>
-        <td>${escapeHtml(r.general.cirugia || "—")}</td>
-        <td>${estadoBadge}</td>
-        <td>${alertBadge}</td>
-        <td class="row-actions">
+        <td data-label="Fecha">${escapeHtml(r.general.fecha || "—")}</td>
+        <td data-label="Paciente">${escapeHtml(r.general.paciente || "—")}</td>
+        <td data-label="Expediente">${escapeHtml(r.general.expediente || "—")}</td>
+        <td data-label="Cirugía">${escapeHtml(r.general.cirugia || "—")}</td>
+        <td data-label="Estado">${estadoBadge}</td>
+        <td data-label="Alertas">${alertBadge}</td>
+        <td class="row-actions" data-label="Acciones">
           <button class="btn btn--ghost" data-act="ver" data-id="${r.id}">Ver</button>
           <button class="btn btn--danger" data-act="borrar" data-id="${r.id}">Eliminar</button>
         </td>

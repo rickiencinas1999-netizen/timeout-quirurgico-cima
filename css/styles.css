@@ -269,6 +269,46 @@ input:focus, select:focus, textarea:focus {
 .history-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
 .history-table th, .history-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
 .history-table th { background: var(--teal-050); color: var(--teal-800); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+
+/* En pantallas angostas la tabla de historial se vuelve tarjetas apiladas,
+   para no dejar "Estado"/"Alertas"/"Acciones" escondidos fuera de vista
+   sin ninguna pista de que hay que deslizar. */
+@media (max-width: 640px) {
+  .table-wrap { overflow-x: visible; border: none; box-shadow: none; background: none; }
+  .history-table, .history-table tbody, .history-table tr, .history-table td { display: block; width: 100%; }
+  .history-table thead { display: none; }
+  .history-table tr {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .history-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line);
+    white-space: normal;
+    text-align: right;
+  }
+  .history-table td:last-child { border-bottom: none; }
+  .history-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--ink-500);
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .history-table td.row-actions { justify-content: flex-end; }
+  .history-table td.row-actions::before { display: none; }
+}
 .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .74rem; font-weight: 700; }
 .badge--ok { background: var(--ok-bg); color: var(--ok); }
 .badge--warn { background: var(--warn-bg); color: var(--warn); }
