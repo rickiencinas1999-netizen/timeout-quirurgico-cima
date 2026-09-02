@@ -5,7 +5,7 @@
    No hay llamadas de red a un backend: todos los registros viven en
    localStorage del navegador. */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `timeout-quirurgico-cima-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -35,18 +35,18 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  // Red primero: mientras haya conexión, siempre se sirve la versión más
+  // reciente publicada (la app cambia seguido). Solo se recurre a la copia
+  // guardada si falla la red (uso sin conexión).
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
