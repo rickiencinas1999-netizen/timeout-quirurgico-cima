@@ -179,7 +179,7 @@ input:focus, select:focus, textarea:focus {
 }
 .item__detail-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px 12px;
   background: var(--teal-050);
   border: 1px solid var(--line);
@@ -187,8 +187,11 @@ input:focus, select:focus, textarea:focus {
   padding: 12px 14px;
 }
 .item__detail-grid label { font-size: .78rem; }
-@media (max-width: 720px) { .item__detail-grid { grid-template-columns: 1fr 1fr; } }
 .item[hidden] { display: none; }
+
+.item--readonly { background: var(--teal-050); border-radius: 8px; padding: 10px 12px; }
+.item__echo { margin: 0; font-size: .85rem; color: var(--teal-800); font-weight: 600; }
+.item__echo--empty { color: var(--ink-500); font-weight: 400; font-style: italic; }
 
 .seg-btn {
   border: 1px solid var(--line);
@@ -216,6 +219,7 @@ input:focus, select:focus, textarea:focus {
 .laser-block { background: var(--teal-050); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
 .laser-block__options { display: flex; flex-direction: column; gap: 8px; padding-left: 4px; }
 .laser-block__options label { flex-direction: row; align-items: center; font-weight: 400; }
+.laser-block__provider { flex-direction: column !important; align-items: stretch !important; font-weight: 600 !important; gap: 4px !important; max-width: 320px; margin-top: 4px; }
 
 /* ---------- Signoff ---------- */
 .signoff {
@@ -273,6 +277,8 @@ input:focus, select:focus, textarea:focus {
 /* ---------- Summary ---------- */
 .summary-block { margin-bottom: 18px; }
 .summary-block h3 { font-size: 1rem; border-bottom: 2px solid var(--teal-100); padding-bottom: 6px; }
+.summary-note { font-size: .85rem; color: var(--ink-700); margin: 6px 0; }
+.summary-note i { color: var(--ink-500); font-style: italic; }
 .summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 4px 20px; font-size: .88rem; }
 .summary-grid div b { color: var(--ink-700); }
 .summary-list { list-style: none; padding: 0; margin: 0; font-size: .85rem; }

@@ -31,13 +31,14 @@ const ITEM_DEFS = {
     { id: "pacienteCorrectoV2", label: "Paciente correcto.", flagOn: "no", critical: true },
     { id: "procedimientoCorrecto", label: "Procedimiento correcto.", flagOn: "no", critical: true },
     { id: "sitioCorrectoV2", label: "Sitio quirúrgico correcto (si aplica).", flagOn: "no", critical: true },
-    { id: "profilaxisV2", label: "Profilaxis antibiótica administrada." },
     { id: "esterilizacionVerificada", label: "Verificación de indicadores de esterilización.", flagOn: "no" },
+    { id: "monitoreoTemperatura", label: "Monitoreo de temperatura continua colocado." },
   ],
   v3: [
     { id: "procedimientoConfirmado", label: "Se confirma procedimiento realizado.", flagOn: "no" },
     { id: "conteoCompleto", label: "Cuenta de instrumental, textil y agujas completa.", flagOn: "no", critical: true },
     { id: "patologiaEtiquetada", label: "Pieza de patología etiquetada y en solución conservadora." },
+    { id: "enviadaPatologia", label: "Pieza enviada a patología.", optional: true },
     { id: "problemasMaterial", label: "¿Existen problemas que reportar (material/equipo)?", flagOn: "si" },
   ],
 };
@@ -113,6 +114,23 @@ function applyConditionalVisibility() {
     const val = sourceItem?.querySelector(".item__answer")?.dataset.value;
     el.hidden = val !== expected;
   });
+  updateProfilaxisEcho();
+}
+
+/* ===================== Eco de profilaxis (V1 -> V2, sin volver a preguntar) === */
+function updateProfilaxisEcho() {
+  const echo = document.getElementById("profilaxisEcho");
+  if (!echo) return;
+  const item = document.querySelector('.item[data-item="profilaxisV1"]');
+  const value = item?.querySelector(".item__answer")?.dataset.value;
+  const { detalle } = item ? readItemDetail(item, "profilaxisV1") : { detalle: "" };
+  if (!value) {
+    echo.textContent = "Aún no se ha registrado en la 1ª verificación.";
+    echo.classList.add("item__echo--empty");
+  } else {
+    echo.textContent = `${ANSWER_LABEL[value]}${detalle ? " — " + detalle : ""} (registrado en la 1ª verificación)`;
+    echo.classList.remove("item__echo--empty");
+  }
 }
 
 /* ================================ Mapa corporal ============================ */
@@ -182,7 +200,7 @@ function setBodyMapMark(mark) {
 }
 
 /* ================================ Implantes ================================ */
-const IMPLANT_FIELDS = ["dispositivo", "fabricante", "modelo", "lote", "serie", "caducidad", "sitio", "cantidad"];
+const IMPLANT_FIELDS = ["dispositivo", "fabricante", "proveedor", "modelo", "lote", "serie", "caducidad", "sitio", "cantidad"];
 
 function addImplantRow(data = {}) {
   const tbody = document.getElementById("implantRows");
@@ -238,7 +256,10 @@ function validateCurrentStep() {
 }
 
 /* ================================ Recolección ================================ */
-const DETAIL_FIELD_LABELS = { hora: "Hora", medicamento: "Medicamento", dosis: "Dosis", via: "Vía" };
+const DETAIL_FIELD_LABELS = {
+  hora: "Hora", medicamento: "Medicamento", dosis: "Dosis", via: "Vía",
+  cantidad: "Cantidad", tipo: "Tipo", proveedor: "Proveedor", temperatura: "Temp. inicial",
+};
 
 function readItemDetail(item, id) {
   const fields = item.querySelectorAll(`[data-detail-for="${id}"][data-detail-field]`);
@@ -288,6 +309,7 @@ function collectForm() {
       laser: {
         usa: document.getElementById("usaLaser").checked,
         epp: form.laser_epp.checked, senalizacion: form.laser_senalizacion.checked, ventana: form.laser_ventana.checked,
+        proveedor: form.laser_proveedor.value.trim(),
       },
     },
     v3: { respuestas: collectPhaseAnswers("v3"), verificadoPor: fd.get("v3_verificadoPor"), hora: fd.get("v3_hora") },
@@ -336,9 +358,10 @@ function renderSummary() {
   const c3 = phaseCompleteness(record, "v3");
   const allComplete = c1.complete && c2.complete && c3.complete;
 
-  const phaseHtml = (phase, title) => `
+  const phaseHtml = (phase, title, extraHtml = "") => `
     <div class="summary-block">
       <h3>${title}</h3>
+      ${extraHtml}
       <ul class="summary-list">
         ${ITEM_DEFS[phase].map((d) => {
           const ans = record[phase].respuestas[d.id];
@@ -351,13 +374,25 @@ function renderSummary() {
       </p>
     </div>`;
 
+  const profV1 = record.v1.respuestas.profilaxisV1;
+  const profilaxisNote = `<p class="summary-note"><b>Profilaxis antibiótica:</b> ${
+    profV1?.value ? ANSWER_LABEL[profV1.value] + (profV1.detalle ? " — " + escapeHtml(profV1.detalle) : "") : "Sin registrar"
+  } <i>(tomado de la 1ª verificación)</i></p>`;
+
+  let laserNote = "";
+  if (record.v2.laser?.usa) {
+    const l = record.v2.laser;
+    const medidas = [l.epp && "EPP", l.senalizacion && "señalización", l.ventana && "protección de ventana"].filter(Boolean).join(", ") || "ninguna marcada";
+    laserNote = `<p class="summary-note"><b>Láser:</b> en uso · Medidas: ${escapeHtml(medidas)}${l.proveedor ? " · Proveedor: " + escapeHtml(l.proveedor) : ""}</p>`;
+  }
+
   let implantHtml = "";
   if (record.implantes.usa && record.implantes.dispositivos.length) {
     implantHtml = `
       <div class="summary-block">
         <h3>Dispositivos médicos implantados</h3>
         <ul class="summary-list">
-          ${record.implantes.dispositivos.map((d) => `<li><span>${escapeHtml(d.dispositivo || "(sin nombre)")} — ${escapeHtml(d.fabricante || "")}</span><b>Lote ${escapeHtml(d.lote || "—")} · Serie ${escapeHtml(d.serie || "—")}</b></li>`).join("")}
+          ${record.implantes.dispositivos.map((d) => `<li><span>${escapeHtml(d.dispositivo || "(sin nombre)")} — ${escapeHtml(d.fabricante || "")}${d.proveedor ? " · Prov: " + escapeHtml(d.proveedor) : ""}</span><b>Lote ${escapeHtml(d.lote || "—")} · Serie ${escapeHtml(d.serie || "—")}</b></li>`).join("")}
         </ul>
       </div>`;
   }
@@ -387,7 +422,7 @@ function renderSummary() {
     ${statusHtml}
     ${alertHtml}
     ${phaseHtml("v1", "1ª Verificación — Antes de la inducción anestésica")}
-    ${phaseHtml("v2", "2ª Verificación — Pausa quirúrgica")}
+    ${phaseHtml("v2", "2ª Verificación — Pausa quirúrgica", profilaxisNote + laserNote)}
     ${phaseHtml("v3", "3ª Verificación — Antes de salir de sala")}
     ${implantHtml}
   `;
@@ -476,6 +511,7 @@ function loadRecordIntoForm(record) {
   form.laser_epp.checked = !!record.v2.laser?.epp;
   form.laser_senalizacion.checked = !!record.v2.laser?.senalizacion;
   form.laser_ventana.checked = !!record.v2.laser?.ventana;
+  form.laser_proveedor.value = record.v2.laser?.proveedor || "";
 
   document.getElementById("implantRows").innerHTML = "";
   document.getElementById("usaImplante").checked = !!record.implantes?.usa;

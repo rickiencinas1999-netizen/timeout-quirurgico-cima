@@ -186,6 +186,21 @@
           <div class="item" data-item="componentesSanguineos">
             <p class="item__label">Disponibilidad de componentes sanguíneos ¿doble vía?</p>
             <div class="item__answer" data-options="si,no,na"></div>
+            <div class="item__detail item__detail-grid" data-show-if="componentesSanguineos=si">
+              <label>Cantidad
+                <input type="number" min="0" data-detail-for="componentesSanguineos" data-detail-field="cantidad">
+              </label>
+              <label>Tipo de componente
+                <select data-detail-for="componentesSanguineos" data-detail-field="tipo">
+                  <option value="">Seleccione…</option>
+                  <option value="Paquete globular">Paquete globular</option>
+                  <option value="Plasma fresco congelado">Plasma fresco congelado</option>
+                  <option value="Plaquetas">Plaquetas</option>
+                  <option value="Crioprecipitado">Crioprecipitado</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div class="item" data-item="valoracionPreanestesica">
@@ -206,6 +221,9 @@
           <div class="item" data-item="materialDisponible">
             <p class="item__label">Material, instrumental, medicamentos y equipo electromédico disponibles.</p>
             <div class="item__answer" data-options="si,no"></div>
+            <label class="item__detail" data-show-if="materialDisponible=si">Proveedor
+              <input type="text" data-detail-for="materialDisponible" placeholder="Ej. Distribuidora XYZ">
+            </label>
           </div>
 
           <div class="item" data-item="vigenciaVerificada">
@@ -254,35 +272,22 @@
             <div class="item__answer" data-options="si,no,na"></div>
           </div>
 
-          <div class="item" data-item="profilaxisV2">
+          <div class="item item--readonly">
             <p class="item__label">Profilaxis antibiótica administrada.</p>
-            <div class="item__answer" data-options="si,no,na"></div>
-            <div class="item__detail item__detail-grid" data-show-if="profilaxisV2=si">
-              <label>Hora de aplicación
-                <input type="time" data-detail-for="profilaxisV2" data-detail-field="hora">
-              </label>
-              <label>Medicamento
-                <input type="text" data-detail-for="profilaxisV2" data-detail-field="medicamento" placeholder="Ej. Cefazolina">
-              </label>
-              <label>Dosis
-                <input type="text" data-detail-for="profilaxisV2" data-detail-field="dosis" placeholder="Ej. 2 g">
-              </label>
-              <label>Vía
-                <select data-detail-for="profilaxisV2" data-detail-field="via">
-                  <option value="">Seleccione…</option>
-                  <option value="IV">IV</option>
-                  <option value="IM">IM</option>
-                  <option value="VO">VO</option>
-                  <option value="Tópica">Tópica</option>
-                  <option value="Otra">Otra</option>
-                </select>
-              </label>
-            </div>
+            <p class="item__echo" id="profilaxisEcho">Se toma de la 1ª verificación.</p>
           </div>
 
           <div class="item" data-item="esterilizacionVerificada">
             <p class="item__label">Verificación de indicadores de esterilización del instrumental a utilizarse.</p>
             <div class="item__answer" data-options="si,no"></div>
+          </div>
+
+          <div class="item" data-item="monitoreoTemperatura">
+            <p class="item__label">¿Se colocó monitoreo de temperatura continua?</p>
+            <div class="item__answer" data-options="si,no"></div>
+            <label class="item__detail" data-show-if="monitoreoTemperatura=si">Primer valor de temperatura (°C)
+              <input type="number" step="0.1" data-detail-for="monitoreoTemperatura" data-detail-field="temperatura" placeholder="Ej. 36.5">
+            </label>
           </div>
 
         </div>
@@ -296,6 +301,9 @@
             <label><input type="checkbox" name="laser_epp"> Uso de equipo de protección personal</label>
             <label><input type="checkbox" name="laser_senalizacion"> Señalización de precaución en puerta de quirófano</label>
             <label><input type="checkbox" name="laser_ventana"> Protección en ventana</label>
+            <label class="laser-block__provider">Proveedor del equipo láser
+              <input type="text" name="laser_proveedor" placeholder="Ej. Distribuidora XYZ">
+            </label>
           </div>
         </div>
 
@@ -336,6 +344,11 @@
             <div class="item__answer" data-options="si,no,na"></div>
           </div>
 
+          <div class="item" data-item="enviadaPatologia" data-show-if="patologiaEtiquetada=si">
+            <p class="item__label">¿La pieza fue enviada a patología?</p>
+            <div class="item__answer" data-options="si,no"></div>
+          </div>
+
           <div class="item" data-item="problemasMaterial">
             <p class="item__label">¿Existen problemas que reportar relacionados con material y equipo utilizado?</p>
             <div class="item__answer" data-options="si,no"></div>
@@ -372,6 +385,7 @@
               <tr>
                 <th>Dispositivo</th>
                 <th>Fabricante / Marca</th>
+                <th>Proveedor</th>
                 <th>Modelo / Referencia</th>
                 <th>Lote</th>
                 <th>Serie</th>
