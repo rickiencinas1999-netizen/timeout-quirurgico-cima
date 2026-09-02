@@ -259,6 +259,7 @@ input:focus, select:focus, textarea:focus {
 
 .stepnav { display: flex; justify-content: space-between; margin-top: 4px; }
 .summary-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.summary-email-hint { margin-top: 8px; font-size: .78rem; color: var(--ink-500); }
 
 /* ---------- History ---------- */
 .history-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -316,7 +317,7 @@ input:focus, select:focus, textarea:focus {
 /* ---------- Print ---------- */
 @media print {
   .app-header, .app-footer, .stepper, .stepnav, #prevStepBtn, #nextStepBtn,
-  .navbtn, .history-toolbar, .summary-actions, .toast { display: none !important; }
+  .navbtn, .history-toolbar, .summary-actions, .summary-email-hint, .toast { display: none !important; }
   .step[data-step="5"] { display: block !important; box-shadow: none; border: none; }
   .step:not([data-step="5"]) { display: none !important; }
   body { background: #fff; }

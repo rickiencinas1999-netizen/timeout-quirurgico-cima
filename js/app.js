@@ -434,6 +434,77 @@ function renderSummary() {
   window.__lastComputedComplete = allComplete;
 }
 
+/* ================================ Envío por correo ================================ */
+const EMAIL_RECIPIENTS = [
+  "jefequirofano@cimahermosillo.com",
+  "amann@cimahermosillo.com",
+  "vburgosn@cimahermosillo.com",
+];
+
+function buildSummaryText() {
+  // Cuerpo deliberadamente breve: algunos clientes de correo de escritorio
+  // (p. ej. Outlook clásico vía mailto) truncan enlaces largos (~2000
+  // caracteres). El detalle completo, reactivo por reactivo, se consulta
+  // imprimiendo el PDF o desde el historial en la app.
+  const record = collectForm();
+  const alerts = computeAlerts(record);
+  const c1 = phaseCompleteness(record, "v1");
+  const c2 = phaseCompleteness(record, "v2");
+  const c3 = phaseCompleteness(record, "v3");
+  const allComplete = c1.complete && c2.complete && c3.complete;
+  const lines = [];
+
+  lines.push("RESUMEN — LISTA DE VERIFICACIÓN QUIRÚRGICA (TIME OUT) — CIMA");
+  lines.push("");
+  lines.push(`Paciente: ${record.general.paciente || "—"}   Expediente: ${record.general.expediente || "—"}`);
+  lines.push(`Fecha: ${record.general.fecha || "—"}   Sala: ${record.general.sala || "—"}`);
+  lines.push(`Cirugía: ${record.general.cirugia || "—"}`);
+  lines.push(`Cirujano: ${record.general.cirujano || "—"}   Anestesiólogo(a): ${record.general.anestesiologo || "—"}`);
+  lines.push("");
+  lines.push(allComplete
+    ? "Estado: las tres verificaciones están completas y firmadas."
+    : `Estado: registro incompleto (V1 ${c1.answered}/${c1.total} · V2 ${c2.answered}/${c2.total} · V3 ${c3.answered}/${c3.total}).`);
+  lines.push("");
+
+  const profV1 = record.v1.respuestas.profilaxisV1;
+  lines.push(`Profilaxis antibiótica: ${profV1?.value ? ANSWER_LABEL[profV1.value] + (profV1.detalle ? " — " + profV1.detalle : "") : "Sin registrar"}`);
+  if (record.v2.laser?.usa) lines.push("Láser: en uso durante el procedimiento.");
+  lines.push("");
+
+  const MAX_ALERTS_LISTADOS = 6;
+  lines.push(`PUNTOS DE ATENCIÓN (${alerts.length})`);
+  if (alerts.length) {
+    alerts.slice(0, MAX_ALERTS_LISTADOS).forEach((a) => lines.push(`- ${a.critical ? "[!] " : ""}${a.text}`));
+    if (alerts.length > MAX_ALERTS_LISTADOS) lines.push(`- (+${alerts.length - MAX_ALERTS_LISTADOS} más — ver detalle en la app)`);
+  } else {
+    lines.push("- Ninguno detectado en las respuestas capturadas.");
+  }
+  lines.push("");
+
+  lines.push("Verificaron:");
+  lines.push(`1ª: ${record.v1.verificadoPor || "—"} (${record.v1.hora || "—"})   2ª: ${record.v2.verificadoPor || "—"} (${record.v2.hora || "—"})   3ª: ${record.v3.verificadoPor || "—"} (${record.v3.hora || "—"})`);
+
+  if (record.implantes.usa && record.implantes.dispositivos.length) {
+    lines.push("");
+    lines.push(`Dispositivos implantados: ${record.implantes.dispositivos.length} registrado(s) — ver detalle en la app.`);
+  }
+
+  lines.push("");
+  lines.push("—");
+  lines.push("Detalle completo reactivo por reactivo: imprima el PDF desde la app o consulte el historial.");
+  lines.push("Generado desde la app Time Out Quirúrgico (CIMA). No sustituye el expediente clínico oficial.");
+
+  return { text: lines.join("\n"), record };
+}
+
+function sendSummaryByEmail() {
+  const { text, record } = buildSummaryText();
+  const subject = `Resumen Time Out — ${record.general.paciente || "paciente"} — ${record.general.fecha || ""}`;
+  const to = EMAIL_RECIPIENTS.join(",");
+  const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+  window.location.href = mailto;
+}
+
 /* ================================ Guardar / Historial ============================ */
 function saveCurrentRecord() {
   const record = collectForm();
@@ -645,6 +716,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSummary();
     window.print();
   });
+  document.getElementById("emailSummaryBtn").addEventListener("click", sendSummaryByEmail);
 
   document.querySelectorAll(".navbtn").forEach((b) => b.addEventListener("click", () => switchView(b.dataset.view)));
   document.getElementById("historySearch").addEventListener("input", renderHistory);
