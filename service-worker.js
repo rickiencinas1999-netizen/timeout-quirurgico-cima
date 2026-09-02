@@ -5,14 +5,16 @@
    No hay llamadas de red a un backend: todos los registros viven en
    localStorage del navegador. */
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `timeout-quirurgico-cima-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./poster.html",
   "./css/styles.css",
   "./js/app.js",
+  "./js/qrcode.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartel — Time Out Quirúrgico (CIMA)</title>
+<link rel="icon" href="icons/icon-192.png">
+<style>
+  :root {
+    --teal-900: #063b3f;
+    --teal-800: #0b4d52;
+    --teal-700: #0e6367;
+    --teal-600: #14828a;
+    --teal-100: #e3f5f5;
+    --teal-050: #f2fbfb;
+    --ink-900: #12211f;
+    --ink-700: #38504d;
+    --ink-500: #5c7370;
+    --line: #d9e6e5;
+    --bg: #f2f6f5;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink-900);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .screen-bar {
+    display: flex; justify-content: center; gap: 12px;
+    padding: 16px; background: var(--teal-800);
+  }
+  .screen-bar a, .screen-bar button {
+    font: inherit; font-weight: 700; font-size: .95rem;
+    padding: 10px 20px; border-radius: 999px; border: 1px solid transparent;
+    cursor: pointer; text-decoration: none;
+  }
+  .screen-bar .btn--primary { background: #fff; color: var(--teal-800); }
+  .screen-bar .btn--ghost { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.4); }
+
+  /* En pantalla la hoja es fluida (para verse bien en cualquier celular);
+     solo toma el tamaño físico exacto de A4 al imprimir (ver @media print). */
+  .sheet {
+    width: 100%;
+    max-width: 210mm;
+    margin: 24px auto;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(6,59,63,.08), 0 12px 32px rgba(6,59,63,.12);
+    padding: clamp(20px, 6vw, 18mm) clamp(16px, 5vw, 16mm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 16px; margin-bottom: clamp(16px, 4vw, 10mm);
+  }
+  .brand__mark {
+    font-weight: 800; font-size: clamp(1.3rem, 4vw, 2rem); letter-spacing: .04em;
+    color: var(--teal-800); background: var(--teal-100);
+    border-radius: 12px; padding: 10px 20px;
+  }
+  .brand__hospital { text-align: left; color: var(--ink-500); font-size: clamp(.8rem, 2.4vw, 1rem); }
+
+  h1 {
+    font-size: clamp(1.7rem, 6vw, 2.6rem); line-height: 1.15; margin: 0 0 clamp(10px, 3vw, 6mm);
+    color: var(--teal-900);
+  }
+  .subtitle {
+    font-size: clamp(1rem, 3.2vw, 1.3rem); color: var(--teal-700); font-weight: 600;
+    margin: 0 0 clamp(16px, 4vw, 12mm); max-width: 150mm;
+  }
+
+  .qr-frame {
+    background: #fff; border: 3px solid var(--teal-800); border-radius: 16px;
+    padding: clamp(10px, 3vw, 10mm); display: inline-flex; margin-bottom: clamp(14px, 3vw, 8mm);
+  }
+  .qr-frame svg { width: min(85mm, 60vw); height: min(85mm, 60vw); display: block; }
+
+  .steps {
+    text-align: left; max-width: 150mm; margin: 0 0 clamp(16px, 4vw, 10mm);
+    font-size: clamp(.95rem, 2.6vw, 1.15rem); line-height: 1.7; color: var(--ink-700);
+  }
+  .steps li { margin-bottom: 4px; }
+
+  .url-box {
+    font-size: clamp(.9rem, 2.6vw, 1.15rem); font-weight: 700; color: var(--teal-800);
+    background: var(--teal-050); border: 1px dashed var(--teal-600);
+    border-radius: 10px; padding: 10px 22px; margin-bottom: clamp(16px, 4vw, 10mm);
+    letter-spacing: .01em; word-break: break-word;
+  }
+
+  .footnote {
+    margin-top: auto; font-size: .85rem; color: var(--ink-500);
+    max-width: 160mm; border-top: 1px solid var(--line); padding-top: clamp(12px, 3vw, 6mm);
+  }
+
+  /* El cartel debe caber siempre en una sola hoja A4 para pegarse en la
+     pared: al imprimir se usan medidas más compactas que en pantalla. */
+  @media print {
+    .screen-bar { display: none !important; }
+    body { background: #fff; }
+    .sheet {
+      box-shadow: none; margin: 0; width: 210mm; max-width: none;
+      height: 297mm; min-height: 0; overflow: hidden;
+      padding: 10mm 14mm; justify-content: center;
+    }
+    .brand { margin-bottom: 6mm; }
+    .brand__mark { font-size: 1.5rem; padding: 6px 14px; }
+    .brand__hospital { font-size: .85rem; }
+    h1 { font-size: 2rem; margin-bottom: 4mm; }
+    .subtitle { font-size: 1.02rem; margin-bottom: 6mm; }
+    .qr-frame { padding: 6mm; border-width: 2px; margin-bottom: 5mm; }
+    .qr-frame svg { width: 62mm; height: 62mm; }
+    .url-box { font-size: .95rem; padding: 7px 16px; margin-bottom: 6mm; }
+    .steps { font-size: .92rem; line-height: 1.45; margin-bottom: 5mm; }
+    .steps li { margin-bottom: 2px; }
+    .footnote { font-size: .68rem; padding-top: 4mm; }
+    @page { size: A4 portrait; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="screen-bar">
+  <button type="button" class="btn--primary" onclick="window.print()">Imprimir cartel</button>
+  <a class="btn--ghost" href="index.html">Volver a la app</a>
+</div>
+
+<div class="sheet">
+  <div class="brand">
+    <span class="brand__mark">CIMA</span>
+    <span class="brand__hospital">El corazón médico de Sonora</span>
+  </div>
+
+  <h1>Time Out Quirúrgico Digital</h1>
+  <p class="subtitle">Escanea este código para abrir la lista de verificación quirúrgica desde tu celular o tablet.</p>
+
+  <div class="qr-frame" id="qrFrame"></div>
+
+  <div class="url-box" id="urlBox">timeout-quirurgico-cima.onrender.com</div>
+
+  <ol class="steps">
+    <li>Abre la cámara de tu celular y apunta al código QR.</li>
+    <li>Toca la notificación o el enlace que aparece.</li>
+    <li>Una vez abierta la app, en el menú de tu navegador elige <strong>"Agregar a pantalla de inicio"</strong> para instalarla como app.</li>
+    <li>Úsala para llenar el checklist de las tres verificaciones de cada cirugía y guardar el registro.</li>
+  </ol>
+
+  <p class="footnote">
+    Lista de verificación quirúrgica alineada con la Lista OMS de Cirugía Segura y con los
+    elementos mínimos de la NOM-004-SSA3-2012 y NOM-006-SSA3-2011. Los registros se guardan
+    únicamente en el dispositivo de quien la usa; no sustituye el expediente clínico oficial.
+  </p>
+</div>
+
+<script src="js/qrcode.js"></script>
+<script>
+  var appUrl = new URL("./", location.href).toString();
+  document.getElementById("urlBox").textContent = appUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  var qr = qrcode(0, "M");
+  qr.addData(appUrl);
+  qr.make();
+  document.getElementById("qrFrame").innerHTML = qr.createSvgTag({ scalable: true });
+</script>
+</body>
+</html>

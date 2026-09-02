@@ -434,6 +434,19 @@ function renderSummary() {
   window.__lastComputedRecord = record;
   window.__lastComputedAlerts = alerts;
   window.__lastComputedComplete = allComplete;
+  renderShareQr();
+}
+
+/* ================================ Compartir la app (QR) ================================ */
+function renderShareQr() {
+  const container = document.getElementById("shareQr");
+  if (!container || container.dataset.rendered) return;
+  const appUrl = new URL("./", location.href).toString();
+  const qr = qrcode(0, "M");
+  qr.addData(appUrl);
+  qr.make();
+  container.innerHTML = qr.createSvgTag({ scalable: true });
+  container.dataset.rendered = "1";
 }
 
 /* ================================ Envío por correo ================================ */

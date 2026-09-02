@@ -34,6 +34,10 @@ ni de datos con ningún otro proyecto clínico digitalizado del hospital.
   componentes disponibles, conteo de gasas/instrumental incompleto).
 - **Historial de registros** con búsqueda, respaldo (exportar/importar JSON) y
   eliminación.
+- **Enviar resumen por correo** a los destinatarios fijos del quirófano, con el
+  detalle completo reactivo por reactivo.
+- **Código QR para compartir la app** al final del resumen, y un **cartel
+  imprimible** (`poster.html`) listo para pegar en la pared del hospital.
 
 Cada reactivo se responde de forma explícita (Sí / No / N/A) — a diferencia de la
 hoja física, donde algunos ítems solo tienen una casilla "Sí" — para evitar
@@ -80,6 +84,19 @@ automático):
 
 Cada vez que se actualice el código en `main`, GitHub Pages republica solo; no
 hay paso de compilación.
+
+## Cartel para pegar en la pared (código QR)
+
+`poster.html` es una página aparte, lista para imprimir: trae el nombre del
+hospital, un código QR grande que apunta a esta misma app y los pasos para
+escanearlo e instalarla. Se abre sola (no necesita el resto de la app) desde
+`https://<dominio-de-la-app>/poster.html`, o con el botón **"Ver / imprimir
+cartel para pared"** que aparece al final del Resumen.
+
+- El código QR se genera en el navegador con la librería vendorizada
+  `js/qrcode.js` (MIT, Kazuhiko Arase) — no depende de ningún servicio externo.
+- Está ajustado para caber siempre en una sola hoja **A4** al imprimir (botón
+  "Imprimir cartel" o Ctrl/Cmd+P); en pantalla se ve de forma responsiva.
 
 ## Aviso importante sobre los datos
 

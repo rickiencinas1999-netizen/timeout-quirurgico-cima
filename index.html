@@ -413,6 +413,15 @@
           <button type="submit" class="btn btn--primary" id="saveRecordBtn">Guardar registro</button>
         </div>
         <p class="summary-email-hint">Abre tu programa de correo con el resumen completo (reactivo por reactivo) y los destinatarios ya listos (jefe de quirófano y equipo). Solo falta que tú le des enviar. No adjunta el PDF automáticamente; con muchas alertas o textos muy largos, algunos correos de escritorio antiguos podrían truncarlo.</p>
+
+        <div class="share-app">
+          <div class="share-app__qr" id="shareQr"></div>
+          <div class="share-app__text">
+            <h3>Comparte esta app con el equipo</h3>
+            <p>Escaneando este código, cualquier celular abre el Time Out Quirúrgico directamente.</p>
+            <a class="btn btn--ghost" href="poster.html" target="_blank" rel="noopener">Ver / imprimir cartel para pared</a>
+          </div>
+        </div>
       </section>
 
       <div class="stepnav">
@@ -462,6 +471,7 @@
 
 <div class="toast" id="toast" hidden></div>
 
+<script src="js/qrcode.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
