@@ -231,6 +231,7 @@ function goToStep(n) {
   });
   document.getElementById("prevStepBtn").disabled = currentStep === 0;
   document.getElementById("nextStepBtn").hidden = currentStep === STEP_COUNT - 1;
+  updateProfilaxisEcho();
   if (currentStep === STEP_COUNT - 1) renderSummary();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
