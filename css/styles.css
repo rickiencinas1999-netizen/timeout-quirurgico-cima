@@ -233,11 +233,13 @@ input:focus, select:focus, textarea:focus {
 @media (max-width: 640px) { .signoff { grid-template-columns: 1fr; } }
 
 /* ---------- Implant table ---------- */
-.implant-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .85rem; }
+.implant-table-wrap { overflow-x: auto; margin: 12px 0; }
+.implant-table { width: 100%; min-width: 920px; border-collapse: collapse; font-size: .85rem; }
 .implant-table th, .implant-table td { border: 1px solid var(--line); padding: 6px; }
-.implant-table th { background: var(--teal-050); text-align: left; font-size: .75rem; }
-.implant-table input { width: 100%; padding: 5px 6px; font-size: .82rem; }
-.implant-table td.rm { text-align: center; }
+.implant-table th { background: var(--teal-050); text-align: left; font-size: .75rem; white-space: nowrap; }
+.implant-table td { min-width: 90px; }
+.implant-table input, .implant-table select { width: 100%; padding: 5px 6px; font-size: .82rem; box-sizing: border-box; }
+.implant-table td.rm { text-align: center; min-width: 40px; }
 
 /* ---------- Buttons ---------- */
 .btn {
