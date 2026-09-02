@@ -123,7 +123,7 @@ function updateProfilaxisEcho() {
   if (!echo) return;
   const item = document.querySelector('.item[data-item="profilaxisV1"]');
   const value = item?.querySelector(".item__answer")?.dataset.value;
-  const { detalle } = item ? readItemDetail(item, "profilaxisV1") : { detalle: "" };
+  const { detalle } = item ? readItemDetail("profilaxisV1") : { detalle: "" };
   if (!value) {
     echo.textContent = "Aún no se ha registrado en la 1ª verificación.";
     echo.classList.add("item__echo--empty");
@@ -261,8 +261,11 @@ const DETAIL_FIELD_LABELS = {
   cantidad: "Cantidad", tipo: "Tipo", proveedor: "Proveedor", temperatura: "Temp. inicial",
 };
 
-function readItemDetail(item, id) {
-  const fields = item.querySelectorAll(`[data-detail-for="${id}"][data-detail-field]`);
+function readItemDetail(id) {
+  // Los campos de detalle no siempre viven dentro del div de su propio ítem
+  // (p. ej. el proveedor de materialDisponible se muestra bajo vigenciaVerificada),
+  // así que se buscan en todo el documento por su id, que es único por página.
+  const fields = document.querySelectorAll(`[data-detail-for="${id}"][data-detail-field]`);
   if (fields.length) {
     const campos = {};
     fields.forEach((el) => { campos[el.dataset.detailField] = el.value.trim(); });
@@ -272,7 +275,7 @@ function readItemDetail(item, id) {
       .join(" · ");
     return { detalle, campos };
   }
-  const detailEl = item.querySelector(`[data-detail-for="${id}"]`);
+  const detailEl = document.querySelector(`[data-detail-for="${id}"]`);
   return { detalle: detailEl ? detailEl.value.trim() : "" };
 }
 
@@ -282,7 +285,7 @@ function collectPhaseAnswers(phase) {
     const id = item.dataset.item;
     const answerEl = item.querySelector(".item__answer");
     const value = answerEl ? answerEl.dataset.value || null : null;
-    answers[id] = { value, ...readItemDetail(item, id) };
+    answers[id] = { value, ...readItemDetail(id) };
   });
   return answers;
 }
@@ -494,11 +497,11 @@ function loadRecordIntoForm(record) {
         answerEl.dataset.value = ans.value;
         answerEl.querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("is-selected", b.dataset.val === ans.value));
       }
-      const fieldEls = item.querySelectorAll(`[data-detail-for="${id}"][data-detail-field]`);
+      const fieldEls = document.querySelectorAll(`[data-detail-for="${id}"][data-detail-field]`);
       if (fieldEls.length) {
         fieldEls.forEach((el) => { el.value = ans.campos?.[el.dataset.detailField] || ""; });
       } else {
-        const detailEl = item.querySelector(`[data-detail-for="${id}"]`);
+        const detailEl = document.querySelector(`[data-detail-for="${id}"]`);
         if (detailEl) detailEl.value = ans.detalle || "";
       }
     });
