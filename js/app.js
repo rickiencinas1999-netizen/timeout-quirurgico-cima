@@ -48,6 +48,7 @@ const STEP_COUNT = 6;
 /* ------------------------------- Estado --------------------------------- */
 let currentStep = 0;
 let editingId = null; // id del registro en edición (si viene del historial)
+let formIsDirty = false; // hay cambios sin guardar desde el último newRecord/loadRecordIntoForm/guardado
 
 /* ============================== Utilidades =============================== */
 function uid() {
@@ -536,6 +537,7 @@ function saveCurrentRecord() {
   saveRecords(records);
   editingId = record.id;
   window.__recordCreatedAt = record.creadoEn;
+  formIsDirty = false;
   showToast("Registro guardado en este dispositivo.");
   renderHistory();
 }
@@ -550,6 +552,7 @@ function resetAllAnswers() {
 function newRecord() {
   editingId = null;
   window.__recordCreatedAt = null;
+  formIsDirty = false;
   document.getElementById("checklistForm").reset();
   resetAllAnswers();
   setBodyMapMark(null);
@@ -571,6 +574,7 @@ function newRecord() {
 function loadRecordIntoForm(record) {
   editingId = record.id;
   window.__recordCreatedAt = record.creadoEn;
+  formIsDirty = false;
   const form = document.getElementById("checklistForm");
   form.reset();
   resetAllAnswers();
@@ -711,6 +715,11 @@ document.addEventListener("DOMContentLoaded", () => {
   buildBodyMap();
   applyConditionalVisibility();
 
+  const checklistForm = document.getElementById("checklistForm");
+  ["input", "change", "click"].forEach((evt) => {
+    checklistForm.addEventListener(evt, () => { formIsDirty = true; });
+  });
+
   document.querySelectorAll("#stepper li").forEach((li) => {
     li.addEventListener("click", () => goToStep(Number(li.dataset.step)));
   });
@@ -738,7 +747,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("emailSummaryBtn").addEventListener("click", sendSummaryByEmail);
 
-  document.querySelectorAll(".navbtn").forEach((b) => b.addEventListener("click", () => switchView(b.dataset.view)));
+  document.querySelectorAll(".navbtn").forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.view === "form" && formIsDirty) {
+      if (!confirm("Esto abrirá un registro nuevo y en blanco. Lo que no hayas guardado de este se perderá. ¿Continuar?")) return;
+    }
+    if (b.dataset.view === "form") newRecord();
+    switchView(b.dataset.view);
+  }));
   document.getElementById("historySearch").addEventListener("input", renderHistory);
   document.getElementById("exportAllBtn").addEventListener("click", exportAll);
   document.getElementById("importFile").addEventListener("change", (e) => {
