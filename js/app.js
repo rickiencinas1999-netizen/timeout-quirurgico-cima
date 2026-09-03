@@ -2,10 +2,56 @@
 
 /* =========================================================================
    Lista de Verificación Quirúrgica (Time Out) — lógica de la aplicación
-   Almacenamiento: localStorage del navegador (sin backend).
+   Almacenamiento: API compartida (server/) respaldada por Postgres, para
+   que distintas personas (preanestesia, quirófano) puedan continuar el
+   mismo registro desde dispositivos distintos.
    ========================================================================= */
 
-const STORAGE_KEY = "cima_timeout_registros_v1";
+const API_BASE = "https://timeout-quirurgico-api.onrender.com";
+const APP_KEY_STORAGE = "cima_timeout_appkey";
+
+function getAppKey() {
+  return localStorage.getItem(APP_KEY_STORAGE) || "";
+}
+function setAppKey(key) {
+  localStorage.setItem(APP_KEY_STORAGE, key);
+}
+function clearAppKey() {
+  localStorage.removeItem(APP_KEY_STORAGE);
+}
+
+/** Llama a la API compartida. Lanza un Error con .status en caso de fallo,
+ *  y si la clave de acceso ya no es válida, vuelve a mostrar la pantalla
+ *  de acceso automáticamente. */
+async function apiFetch(path, options = {}) {
+  let res;
+  try {
+    res = await fetch(API_BASE + path, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Key": getAppKey(),
+        ...(options.headers || {}),
+      },
+    });
+  } catch (networkErr) {
+    const err = new Error("No se pudo conectar con el servidor. Revisa tu conexión a internet.");
+    err.cause = networkErr;
+    throw err;
+  }
+  if (res.status === 401) {
+    clearAppKey();
+    showAuthGate("Tu clave de acceso ya no es válida. Vuelve a ingresarla.");
+    throw new Error("Clave de acceso inválida.");
+  }
+  if (!res.ok) {
+    let msg = `Error del servidor (${res.status}).`;
+    try { msg = (await res.json()).error || msg; } catch { /* respuesta sin JSON */ }
+    throw new Error(msg);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
 
 /* ---- Catálogo de reactivos por fase (id debe coincidir con data-item) --- */
 const ITEM_DEFS = {
@@ -60,16 +106,6 @@ function todayISO() {
 function nowHM() {
   const d = new Date();
   return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
-}
-function loadRecords() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-function saveRecords(records) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 }
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -232,6 +268,8 @@ function goToStep(n) {
   });
   document.getElementById("prevStepBtn").disabled = currentStep === 0;
   document.getElementById("nextStepBtn").hidden = currentStep === STEP_COUNT - 1;
+  document.getElementById("saveProgressBtn").hidden = currentStep === STEP_COUNT - 1;
+  document.getElementById("saveProgressHint").hidden = currentStep === STEP_COUNT - 1;
   updateProfilaxisEcho();
   if (currentStep === STEP_COUNT - 1) renderSummary();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -540,19 +578,27 @@ function sendSummaryByEmail() {
 }
 
 /* ================================ Guardar / Historial ============================ */
-function saveCurrentRecord() {
+async function saveCurrentRecord() {
+  const wasNew = editingId === null;
   const record = collectForm();
   record.alertas = computeAlerts(record);
   record.completo = ["v1", "v2", "v3"].every((p) => phaseCompleteness(record, p).complete);
-  const records = loadRecords();
-  const idx = records.findIndex((r) => r.id === record.id);
-  if (idx >= 0) records[idx] = record; else records.push(record);
-  saveRecords(records);
-  editingId = record.id;
-  window.__recordCreatedAt = record.creadoEn;
-  formIsDirty = false;
-  showToast("Registro guardado en este dispositivo.");
-  renderHistory();
+  const saveBtns = [document.getElementById("saveRecordBtn"), document.getElementById("saveProgressBtn")].filter(Boolean);
+  saveBtns.forEach((b) => { b.disabled = true; });
+  try {
+    const saved = wasNew
+      ? await apiFetch("/api/registros", { method: "POST", body: JSON.stringify(record) })
+      : await apiFetch(`/api/registros/${encodeURIComponent(record.id)}`, { method: "PUT", body: JSON.stringify(record) });
+    editingId = saved.id;
+    window.__recordCreatedAt = saved.creadoEn;
+    formIsDirty = false;
+    showToast("Registro guardado en el servidor. Ya lo puede continuar cualquier otro dispositivo.");
+    renderHistory();
+  } catch (err) {
+    showToast(err.message || "No se pudo guardar. Intenta de nuevo.");
+  } finally {
+    saveBtns.forEach((b) => { b.disabled = false; });
+  }
 }
 
 function resetAllAnswers() {
@@ -633,21 +679,37 @@ function loadRecordIntoForm(record) {
   goToStep(0);
 }
 
-function deleteRecord(id) {
-  if (!confirm("¿Eliminar este registro de forma permanente de este dispositivo?")) return;
-  saveRecords(loadRecords().filter((r) => r.id !== id));
-  renderHistory();
-  showToast("Registro eliminado.");
+async function deleteRecord(id) {
+  if (!confirm("¿Eliminar este registro de forma permanente del servidor? Ya no lo verá nadie más.")) return;
+  try {
+    await apiFetch(`/api/registros/${encodeURIComponent(id)}`, { method: "DELETE" });
+    showToast("Registro eliminado.");
+    renderHistory();
+  } catch (err) {
+    showToast(err.message || "No se pudo eliminar. Intenta de nuevo.");
+  }
 }
 
-function renderHistory() {
-  const records = loadRecords().sort((a, b) => (b.creadoEn || "").localeCompare(a.creadoEn || ""));
-  const query = (document.getElementById("historySearch").value || "").toLowerCase();
-  const filtered = records.filter((r) => {
-    const hay = `${r.general.paciente} ${r.general.expediente} ${r.general.cirugia}`.toLowerCase();
-    return hay.includes(query);
-  });
+let lastHistoryRecords = [];
+
+async function renderHistory() {
   const tbody = document.getElementById("historyRows");
+  const query = (document.getElementById("historySearch").value || "").trim();
+  const soloIncompletos = document.getElementById("filterIncompletos").checked;
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--ink-500)">Cargando…</td></tr>`;
+  let records;
+  try {
+    const qs = query ? `?q=${encodeURIComponent(query)}` : "";
+    records = await apiFetch(`/api/registros${qs}`);
+  } catch (err) {
+    tbody.innerHTML = "";
+    document.getElementById("historyEmpty").hidden = true;
+    showToast(err.message || "No se pudo cargar el historial del servidor.");
+    return;
+  }
+  lastHistoryRecords = records;
+  const filtered = soloIncompletos ? records.filter((r) => !r.completo) : records;
+
   document.getElementById("historyEmpty").hidden = records.length !== 0;
   tbody.innerHTML = filtered.map((r) => {
     const alerts = r.alertas || computeAlerts(r);
@@ -671,11 +733,11 @@ function renderHistory() {
           <button class="btn btn--danger" data-act="borrar" data-id="${r.id}">Eliminar</button>
         </td>
       </tr>`;
-  }).join("");
+  }).join("") || (query || soloIncompletos ? `<tr><td colspan="7" style="text-align:center;color:var(--ink-500)">Sin resultados.</td></tr>` : "");
 
   tbody.querySelectorAll("[data-act='ver']").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const rec = loadRecords().find((r) => r.id === btn.dataset.id);
+      const rec = lastHistoryRecords.find((r) => r.id === btn.dataset.id);
       if (rec) { loadRecordIntoForm(rec); switchView("form"); goToStep(5); }
     });
   });
@@ -692,34 +754,63 @@ function switchView(view) {
   if (view === "history") renderHistory();
 }
 
-/* ================================ Exportar / Importar ================================ */
-function exportAll() {
-  const data = JSON.stringify(loadRecords(), null, 2);
-  const blob = new Blob([data], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `timeout_quirurgico_${todayISO()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+/* ================================ Exportar / Importar (respaldo) ================================ */
+async function exportAll() {
+  try {
+    const records = await apiFetch("/api/registros?limit=500");
+    const data = JSON.stringify(records, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `timeout_quirurgico_${todayISO()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    showToast(err.message || "No se pudo exportar.");
+  }
 }
-function importAll(file) {
+async function importAll(file) {
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
+    let incoming;
     try {
-      const incoming = JSON.parse(reader.result);
+      incoming = JSON.parse(reader.result);
       if (!Array.isArray(incoming)) throw new Error("Formato inválido");
-      const existing = loadRecords();
-      const byId = new Map(existing.map((r) => [r.id, r]));
-      incoming.forEach((r) => byId.set(r.id, r));
-      saveRecords(Array.from(byId.values()));
-      renderHistory();
-      showToast(`Se importaron ${incoming.length} registro(s).`);
-    } catch (e) {
+    } catch {
       showToast("No se pudo importar el archivo (formato inválido).");
+      return;
     }
+    let ok = 0, fail = 0;
+    for (const record of incoming) {
+      if (!record?.id) { fail++; continue; }
+      try {
+        await apiFetch(`/api/registros/${encodeURIComponent(record.id)}`, { method: "PUT", body: JSON.stringify(record) });
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    renderHistory();
+    showToast(fail ? `Se importaron ${ok} registro(s); ${fail} fallaron.` : `Se importaron ${ok} registro(s).`);
   };
   reader.readAsText(file);
+}
+
+/* ================================ Acceso (clave compartida) ================================ */
+function showAuthGate(message) {
+  const errorEl = document.getElementById("authGateError");
+  if (message) { errorEl.textContent = message; errorEl.hidden = false; }
+  else { errorEl.hidden = true; }
+  document.getElementById("authGate").hidden = false;
+  document.getElementById("authGateInput").focus();
+}
+function hideAuthGate() {
+  document.getElementById("authGate").hidden = true;
+}
+async function verifyAppKey(key) {
+  const res = await fetch(`${API_BASE}/api/registros?limit=1`, { headers: { "X-App-Key": key } });
+  return res.ok;
 }
 
 /* ================================ Inicialización ================================ */
@@ -754,6 +845,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     saveCurrentRecord();
   });
+  document.getElementById("saveProgressBtn").addEventListener("click", () => saveCurrentRecord());
   document.getElementById("printSummaryBtn").addEventListener("click", () => {
     renderSummary();
     window.print();
@@ -767,14 +859,43 @@ document.addEventListener("DOMContentLoaded", () => {
     if (b.dataset.view === "form") newRecord();
     switchView(b.dataset.view);
   }));
-  document.getElementById("historySearch").addEventListener("input", renderHistory);
+  let searchDebounce;
+  document.getElementById("historySearch").addEventListener("input", () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(renderHistory, 300);
+  });
+  document.getElementById("filterIncompletos").addEventListener("change", renderHistory);
   document.getElementById("exportAllBtn").addEventListener("click", exportAll);
   document.getElementById("importFile").addEventListener("change", (e) => {
     if (e.target.files[0]) importAll(e.target.files[0]);
   });
 
+  document.getElementById("authGateForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("authGateInput");
+    const key = input.value.trim();
+    if (!key) return;
+    const btn = e.target.querySelector("button[type=submit]");
+    btn.disabled = true;
+    try {
+      if (!(await verifyAppKey(key))) throw new Error();
+      setAppKey(key);
+      input.value = "";
+      hideAuthGate();
+      renderHistory();
+    } catch {
+      document.getElementById("authGateError").hidden = false;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
   newRecord();
-  renderHistory();
+  if (getAppKey()) {
+    apiFetch("/api/registros?limit=1").catch(() => {});
+  } else {
+    showAuthGate();
+  }
 });
 
 /* ================================ PWA: service worker ================================ */

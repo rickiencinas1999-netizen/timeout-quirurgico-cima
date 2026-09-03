@@ -46,7 +46,12 @@ principio de verificación activa de la Lista OMS.
 
 ## Cómo usarla
 
-No requiere instalación de software ni backend: es HTML/CSS/JavaScript puro.
+El frontend (`index.html`, `css/`, `js/`) es HTML/CSS/JavaScript puro y no
+necesita compilación. Los registros ya **no** se guardan solo en el navegador:
+se guardan en un servidor compartido (ver [Guardado compartido entre
+dispositivos](#guardado-compartido-entre-dispositivos-servidor)), así que la
+primera vez que se abre la app en un dispositivo pide una **clave de acceso**
+compartida del hospital.
 
 1. Abra `index.html` directamente en el navegador, o sírvalo con cualquier
    servidor estático, por ejemplo:
@@ -54,10 +59,16 @@ No requiere instalación de software ni backend: es HTML/CSS/JavaScript puro.
    python3 -m http.server 8080
    ```
    y visite `http://localhost:8080`.
-2. Complete el formulario paso a paso (Datos generales → 1ª, 2ª y 3ª
-   verificación → Implantes → Resumen).
-3. En "Resumen" puede **imprimir / guardar como PDF** y **guardar el registro**.
-4. En "Historial" puede buscar, ver, eliminar o exportar/importar respaldos.
+2. Introduzca la clave de acceso compartida (una sola vez por dispositivo).
+3. Complete el formulario paso a paso (Datos generales → 1ª, 2ª y 3ª
+   verificación → Implantes → Resumen). Si solo va a llenar hasta cierto
+   punto (p. ej. preanestesia solo hace la 1ª verificación), use **"Guardar
+   y continuar después"**: el siguiente turno podrá abrir el mismo registro
+   desde otro dispositivo y seguirle.
+4. En "Resumen" puede **imprimir / guardar como PDF** y **guardar el registro**
+   como completo.
+5. En "Historial" puede buscar, filtrar por "Solo incompletos", ver, continuar,
+   eliminar o exportar/importar respaldos.
 
 ## Instalarla como app (PWA)
 
@@ -71,8 +82,9 @@ automático):
 
 1. En GitHub → **Settings → General → Danger Zone → Change visibility** → hacer
    el repositorio **público** (Pages en cuentas gratuitas solo sirve repos
-   públicos; el código no contiene datos de pacientes — esos solo existen en el
-   `localStorage` de cada dispositivo, nunca en el repositorio).
+   públicos; el código no contiene datos de pacientes — esos viven en la base
+   de datos del servidor compartido, nunca en el repositorio; ver [Guardado
+   compartido entre dispositivos](#guardado-compartido-entre-dispositivos-servidor)).
 2. **Settings → Pages → Build and deployment → Source**: `Deploy from a branch`
    → Branch: `main`, carpeta `/ (root)` → **Save**.
 3. Tras uno o dos minutos, GitHub publica la URL (algo como
@@ -98,21 +110,65 @@ cartel para pared"** que aparece al final del Resumen.
 - Está ajustado para caber siempre en una sola hoja **A4** al imprimir (botón
   "Imprimir cartel" o Ctrl/Cmd+P); en pantalla se ve de forma responsiva.
 
-## Aviso importante sobre los datos
+## Guardado compartido entre dispositivos (servidor)
 
-Los registros se guardan **únicamente en el almacenamiento local (`localStorage`)
-del navegador/dispositivo donde se usa la app**; no se envían a ningún servidor.
-Esto significa que:
+Un mismo registro lo llenan **varias personas en momentos y lugares distintos**
+(la 1ª verificación en preanestesia, la 2ª y 3ª ya dentro de quirófano), así
+que la app ya no guarda solo en el `localStorage` del navegador: guarda en un
+servidor compartido (`server/`, API en Node.js/Express + PostgreSQL,
+desplegado en Render) para que cualquier dispositivo autorizado pueda abrir y
+continuar el mismo registro.
 
-- Los datos **no se sincronizan** entre equipos ni usuarios.
-- Si se borra la caché del navegador o se cambia de dispositivo, se pierde el
-  historial local, a menos que se haya exportado previamente (botón
-  "Exportar todo (JSON)").
-- Para un uso institucional en producción (múltiples quirófanos, integración con
-  el expediente clínico electrónico, resguardo legal de la información conforme a
-  la NOM-004-SSA3-2012 y a la normativa de protección de datos personales),
-  se recomienda evaluar con el área de sistemas del hospital una capa de
-  almacenamiento centralizada y segura antes de sustituir el formato físico.
+- **`server/`** contiene la API (`server.js`) que expone `GET/POST/PUT/DELETE
+  /api/registros`. Cada registro se guarda como JSON en PostgreSQL, con
+  búsqueda por paciente/expediente/cirugía y una bandera `completo` para
+  filtrar los que aún les falta alguna verificación.
+- El frontend (`js/app.js`) habla con esa API por `fetch()`. Ya no hay
+  ningún dato clínico guardado exclusivamente en el navegador salvo la clave
+  de acceso del dispositivo.
+- **Clave de acceso compartida (`APP_KEY`)**: no es una cuenta por persona,
+  es una sola clave que se reparte al personal de quirófano/preanestesia y se
+  captura una vez por dispositivo (queda guardada en `localStorage` de ese
+  equipo). Sirve para que la URL de la API no quede abierta a cualquiera que
+  la encuentre, **no es una autenticación clínica real por usuario** — quien
+  tenga la clave y algo de conocimiento técnico podría en teoría extraerla del
+  código público del navegador. Si el hospital necesita trazabilidad por
+  usuario (quién llenó qué), eso requeriría una capa de login real, pendiente
+  de evaluar con el área de sistemas.
+- **Variables de entorno del servicio `server/`** (se configuran en Render,
+  no se suben al repositorio):
+  - `DATABASE_URL` — cadena de conexión de PostgreSQL.
+  - `APP_KEY` — la clave compartida descrita arriba.
+  - `ALLOWED_ORIGINS` — dominios permitidos por CORS (el dominio del
+    frontend), separados por coma.
+  - `PORT` — la asigna Render automáticamente.
+  - `PGSSL=false` — solo para desarrollo local contra un Postgres sin SSL;
+    en producción se deja sin definir (usa SSL).
+
+### Aviso importante: plan gratuito de la base de datos
+
+Por ahora la base de datos corre en el **plan gratuito de Render**, el cual
+**se elimina automáticamente 30 días después de creada** (expira el
+**2026-10-03**). Esto significa que, si no se actualiza a un plan de pago
+antes de esa fecha, **se perderían todos los registros guardados**.
+
+**Antes de usar esta app con pacientes reales**, es indispensable:
+
+1. Actualizar la base de datos de Render a un **plan de pago** (elimina el
+   borrado automático a los 30 días).
+2. Definir con el hospital una política de respaldo (exportar periódicamente
+   desde "Historial → Exportar todo (JSON)", además de la base de datos) y de
+   resguardo legal de la información conforme a la NOM-004-SSA3-2012 y la
+   normativa de protección de datos personales.
+3. Evaluar con el área de sistemas del hospital si se requiere una capa de
+   autenticación por usuario (más allá de la clave compartida) antes de
+   integrarlo como reemplazo formal del papel.
+
+También hay que considerar que el **servicio web gratuito** de Render "se
+duerme" tras ~15 minutos sin uso: la primera solicitud después de ese tiempo
+puede tardar entre 30 y 60 segundos en responder mientras el servidor
+despierta. Para uso institucional constante conviene un plan de pago que
+evite esta pausa.
 
 Esta herramienta es un apoyo para la digitalización y estandarización del llenado;
 no sustituye el juicio clínico del equipo quirúrgico ni los procesos de calidad y

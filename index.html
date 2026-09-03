@@ -20,6 +20,19 @@
 </head>
 <body>
 
+<div class="auth-gate" id="authGate" hidden>
+  <form class="auth-gate__card" id="authGateForm">
+    <span class="app-header__hospital">CIMA</span>
+    <h2>Acceso al Time Out Quirúrgico</h2>
+    <p>Introduce la clave de acceso compartida del hospital para entrar. Pídesela al jefe de quirófano si no la tienes.</p>
+    <label>Clave de acceso
+      <input type="password" id="authGateInput" autocomplete="off" required>
+    </label>
+    <p class="auth-gate__error" id="authGateError" hidden>Clave incorrecta. Intenta de nuevo.</p>
+    <button type="submit" class="btn btn--primary">Entrar</button>
+  </form>
+</div>
+
 <header class="app-header">
   <div class="app-header__brand">
     <span class="app-header__hospital" id="hospitalName">CIMA</span>
@@ -426,8 +439,10 @@
 
       <div class="stepnav">
         <button type="button" class="btn btn--ghost" id="prevStepBtn">Anterior</button>
+        <button type="button" class="btn btn--ghost" id="saveProgressBtn">Guardar y continuar después</button>
         <button type="button" class="btn btn--primary" id="nextStepBtn">Siguiente</button>
       </div>
+      <p class="stepnav__hint" id="saveProgressHint">¿Solo vas a llenar hasta aquí (p. ej. preanestesia)? Usa "Guardar y continuar después": el siguiente turno podrá abrir este mismo registro desde otro dispositivo y seguirle.</p>
 
     </form>
   </section>
@@ -438,6 +453,7 @@
       <h2>Historial de registros</h2>
       <div class="history-toolbar__actions">
         <input type="search" id="historySearch" placeholder="Buscar por paciente, expediente o cirugía…">
+        <label class="switch switch--inline"><input type="checkbox" id="filterIncompletos"> Solo incompletos</label>
         <button type="button" class="btn btn--ghost" id="exportAllBtn">Exportar todo (JSON)</button>
         <label class="btn btn--ghost file-btn">Importar
           <input type="file" id="importFile" accept="application/json" hidden>
@@ -460,13 +476,13 @@
         <tbody id="historyRows"></tbody>
       </table>
     </div>
-    <p class="empty-state" id="historyEmpty" hidden>Aún no hay registros guardados en este dispositivo.</p>
+    <p class="empty-state" id="historyEmpty" hidden>Aún no hay registros guardados en el servidor.</p>
   </section>
 
 </main>
 
 <footer class="app-footer">
-  <p><strong>Aviso:</strong> los registros se guardan únicamente en el almacenamiento local de este navegador/dispositivo. Exporte periódicamente el respaldo (JSON) y consulte con el área de sistemas del hospital antes de usar esta herramienta como sustituto del expediente clínico oficial (NOM-004-SSA3-2012). Esta lista de verificación se basa en la Lista OMS de Verificación de la Cirugía Segura y en los elementos mínimos observados en el formato físico institucional.</p>
+  <p><strong>Aviso:</strong> los registros se guardan en un servidor compartido del hospital (no solo en este dispositivo), para que distintas personas puedan continuar el mismo registro — p. ej. preanestesia inicia la 1ª verificación y quirófano completa la 2ª y 3ª. Exporte periódicamente un respaldo (JSON) y consulte con el área de sistemas del hospital antes de usar esta herramienta como sustituto del expediente clínico oficial (NOM-004-SSA3-2012). Esta lista de verificación se basa en la Lista OMS de Verificación de la Cirugía Segura y en los elementos mínimos observados en el formato físico institucional.</p>
 </footer>
 
 <div class="toast" id="toast" hidden></div>
