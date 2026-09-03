@@ -1,11 +1,12 @@
 "use strict";
 
 /* Service worker del Time Out Quirúrgico (CIMA).
-   Cachea el shell estático para permitir instalación y uso sin conexión.
-   No hay llamadas de red a un backend: todos los registros viven en
-   localStorage del navegador. */
+   Cachea el shell estático (HTML/CSS/JS) para permitir instalación y uso
+   sin conexión. Los registros ya no viven en localStorage: se guardan en
+   el servidor compartido, así que guardar/continuar un registro requiere
+   conexión (solo el "cascarón" de la app funciona sin internet). */
 
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `timeout-quirurgico-cima-${CACHE_VERSION}`;
 
 const APP_SHELL = [
