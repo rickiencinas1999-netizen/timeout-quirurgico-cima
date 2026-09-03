@@ -6,7 +6,7 @@
    el servidor compartido, así que guardar/continuar un registro requiere
    conexión (solo el "cascarón" de la app funciona sin internet). */
 
-const CACHE_VERSION = "v4";
+const CACHE_VERSION = "v5";
 const CACHE_NAME = `timeout-quirurgico-cima-${CACHE_VERSION}`;
 
 const APP_SHELL = [

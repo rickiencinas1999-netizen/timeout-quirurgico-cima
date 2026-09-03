@@ -49,9 +49,8 @@ principio de verificación activa de la Lista OMS.
 El frontend (`index.html`, `css/`, `js/`) es HTML/CSS/JavaScript puro y no
 necesita compilación. Los registros ya **no** se guardan solo en el navegador:
 se guardan en un servidor compartido (ver [Guardado compartido entre
-dispositivos](#guardado-compartido-entre-dispositivos-servidor)), así que la
-primera vez que se abre la app en un dispositivo pide una **clave de acceso**
-compartida del hospital.
+dispositivos](#guardado-compartido-entre-dispositivos-servidor)), sin ninguna
+clave ni inicio de sesión: cualquiera con la URL de la app entra directo.
 
 1. Abra `index.html` directamente en el navegador, o sírvalo con cualquier
    servidor estático, por ejemplo:
@@ -59,8 +58,7 @@ compartida del hospital.
    python3 -m http.server 8080
    ```
    y visite `http://localhost:8080`.
-2. Introduzca la clave de acceso compartida (una sola vez por dispositivo).
-3. Complete el formulario paso a paso (Datos generales → 1ª, 2ª y 3ª
+2. Complete el formulario paso a paso (Datos generales → 1ª, 2ª y 3ª
    verificación → Implantes → Resumen). Si solo va a llenar hasta cierto
    punto (p. ej. preanestesia solo hace la 1ª verificación), use **"Guardar
    y continuar después"**: el siguiente turno podrá abrir el mismo registro
@@ -123,22 +121,20 @@ continuar el mismo registro.
   /api/registros`. Cada registro se guarda como JSON en PostgreSQL, con
   búsqueda por paciente/expediente/cirugía y una bandera `completo` para
   filtrar los que aún les falta alguna verificación.
-- El frontend (`js/app.js`) habla con esa API por `fetch()`. Ya no hay
-  ningún dato clínico guardado exclusivamente en el navegador salvo la clave
-  de acceso del dispositivo.
-- **Clave de acceso compartida (`APP_KEY`)**: no es una cuenta por persona,
-  es una sola clave que se reparte al personal de quirófano/preanestesia y se
-  captura una vez por dispositivo (queda guardada en `localStorage` de ese
-  equipo). Sirve para que la URL de la API no quede abierta a cualquiera que
-  la encuentre, **no es una autenticación clínica real por usuario** — quien
-  tenga la clave y algo de conocimiento técnico podría en teoría extraerla del
-  código público del navegador. Si el hospital necesita trazabilidad por
-  usuario (quién llenó qué), eso requeriría una capa de login real, pendiente
-  de evaluar con el área de sistemas.
+- El frontend (`js/app.js`) habla con esa API por `fetch()`. Ya no hay ningún
+  dato clínico guardado en el navegador; todo vive en el servidor.
+- **Sin clave de acceso ni inicio de sesión**: cualquiera con la URL de la app
+  puede ver y editar los registros — se eligió así para no interponer nada al
+  personal en preanestesia/quirófano. El servidor sí soporta activar una
+  clave compartida (`APP_KEY`, deshabilitada por ahora) o una capa de login
+  real si el hospital lo requiere más adelante; conviene evaluarlo con el
+  área de sistemas antes de usarla con pacientes reales, ya que hoy la URL de
+  la API queda abierta a quien la encuentre.
 - **Variables de entorno del servicio `server/`** (se configuran en Render,
   no se suben al repositorio):
   - `DATABASE_URL` — cadena de conexión de PostgreSQL.
-  - `APP_KEY` — la clave compartida descrita arriba.
+  - `APP_KEY` — opcional; si se define, exige el header `X-App-Key` en cada
+    solicitud (hoy no está definida).
   - `ALLOWED_ORIGINS` — dominios permitidos por CORS (el dominio del
     frontend), separados por coma.
   - `PORT` — la asigna Render automáticamente.
@@ -160,9 +156,10 @@ antes de esa fecha, **se perderían todos los registros guardados**.
    desde "Historial → Exportar todo (JSON)", además de la base de datos) y de
    resguardo legal de la información conforme a la NOM-004-SSA3-2012 y la
    normativa de protección de datos personales.
-3. Evaluar con el área de sistemas del hospital si se requiere una capa de
-   autenticación por usuario (más allá de la clave compartida) antes de
-   integrarlo como reemplazo formal del papel.
+3. Evaluar con el área de sistemas del hospital si se requiere restringir el
+   acceso a la app (clave compartida, red interna del hospital, login por
+   usuario) antes de integrarla como reemplazo formal del papel — hoy no
+   pide nada y cualquiera con la URL puede entrar.
 
 También hay que considerar que el **servicio web gratuito** de Render "se
 duerme" tras ~15 minutos sin uso: la primera solicitud después de ese tiempo

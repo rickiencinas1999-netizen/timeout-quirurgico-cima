@@ -8,21 +8,8 @@
    ========================================================================= */
 
 const API_BASE = "https://timeout-quirurgico-api.onrender.com";
-const APP_KEY_STORAGE = "cima_timeout_appkey";
 
-function getAppKey() {
-  return localStorage.getItem(APP_KEY_STORAGE) || "";
-}
-function setAppKey(key) {
-  localStorage.setItem(APP_KEY_STORAGE, key);
-}
-function clearAppKey() {
-  localStorage.removeItem(APP_KEY_STORAGE);
-}
-
-/** Llama a la API compartida. Lanza un Error con .status en caso de fallo,
- *  y si la clave de acceso ya no es válida, vuelve a mostrar la pantalla
- *  de acceso automáticamente. */
+/** Llama a la API compartida. Lanza un Error con .status en caso de fallo. */
 async function apiFetch(path, options = {}) {
   let res;
   try {
@@ -30,7 +17,6 @@ async function apiFetch(path, options = {}) {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        "X-App-Key": getAppKey(),
         ...(options.headers || {}),
       },
     });
@@ -38,11 +24,6 @@ async function apiFetch(path, options = {}) {
     const err = new Error("No se pudo conectar con el servidor. Revisa tu conexión a internet.");
     err.cause = networkErr;
     throw err;
-  }
-  if (res.status === 401) {
-    clearAppKey();
-    showAuthGate("Tu clave de acceso ya no es válida. Vuelve a ingresarla.");
-    throw new Error("Clave de acceso inválida.");
   }
   if (!res.ok) {
     let msg = `Error del servidor (${res.status}).`;
@@ -797,22 +778,6 @@ async function importAll(file) {
   reader.readAsText(file);
 }
 
-/* ================================ Acceso (clave compartida) ================================ */
-function showAuthGate(message) {
-  const errorEl = document.getElementById("authGateError");
-  if (message) { errorEl.textContent = message; errorEl.hidden = false; }
-  else { errorEl.hidden = true; }
-  document.getElementById("authGate").hidden = false;
-  document.getElementById("authGateInput").focus();
-}
-function hideAuthGate() {
-  document.getElementById("authGate").hidden = true;
-}
-async function verifyAppKey(key) {
-  const res = await fetch(`${API_BASE}/api/registros?limit=1`, { headers: { "X-App-Key": key } });
-  return res.ok;
-}
-
 /* ================================ Inicialización ================================ */
 document.addEventListener("DOMContentLoaded", () => {
   buildSegmentedControls();
@@ -870,32 +835,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.files[0]) importAll(e.target.files[0]);
   });
 
-  document.getElementById("authGateForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const input = document.getElementById("authGateInput");
-    const key = input.value.trim();
-    if (!key) return;
-    const btn = e.target.querySelector("button[type=submit]");
-    btn.disabled = true;
-    try {
-      if (!(await verifyAppKey(key))) throw new Error();
-      setAppKey(key);
-      input.value = "";
-      hideAuthGate();
-      renderHistory();
-    } catch {
-      document.getElementById("authGateError").hidden = false;
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
   newRecord();
-  if (getAppKey()) {
-    apiFetch("/api/registros?limit=1").catch(() => {});
-  } else {
-    showAuthGate();
-  }
 });
 
 /* ================================ PWA: service worker ================================ */

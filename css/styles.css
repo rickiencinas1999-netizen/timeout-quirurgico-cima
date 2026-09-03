@@ -375,33 +375,11 @@ input:focus, select:focus, textarea:focus {
 }
 .toast[hidden] { display: none; }
 
-/* ---------- Acceso (clave compartida) ---------- */
-.auth-gate {
-  position: fixed; inset: 0; z-index: 100;
-  background: linear-gradient(180deg, var(--teal-900), var(--teal-700));
-  display: flex; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.auth-gate[hidden] { display: none; }
-.auth-gate__card {
-  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
-  padding: 28px 26px; max-width: 360px; width: 100%;
-  display: flex; flex-direction: column; gap: 12px; text-align: center;
-}
-.auth-gate__card .app-header__hospital {
-  align-self: center; background: var(--teal-100); color: var(--teal-800);
-}
-.auth-gate__card h2 { margin: 4px 0 0; font-size: 1.15rem; }
-.auth-gate__card p { color: var(--ink-500); font-size: .85rem; margin: 0; }
-.auth-gate__card label { text-align: left; }
-.auth-gate__error { color: var(--danger) !important; font-weight: 600; }
-.auth-gate__error[hidden] { display: none; }
-
 /* ---------- Print ---------- */
 @media print {
   .app-header, .app-footer, .stepper, .stepnav, #prevStepBtn, #nextStepBtn,
   .navbtn, .history-toolbar, .summary-actions, .summary-email-hint, .share-app, .toast,
-  .auth-gate, .stepnav__hint { display: none !important; }
+  .stepnav__hint { display: none !important; }
   .step[data-step="5"] { display: block !important; box-shadow: none; border: none; }
   .step:not([data-step="5"]) { display: none !important; }
   body { background: #fff; }
